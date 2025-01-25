@@ -71,6 +71,14 @@ func (s httpServer) MountRoutes(db *sqlx.DB) {
 	s.app.Use(func(c *fiber.Ctx) error {
 		return c.SendFile("./web/not-found.html")
 	})
+
+	// // Initialize repositories
+	// purchaseRepository := purchaseRepo.NewPurchaseRepository(db)
+
+	// // Initialize services
+	// purchaseService := purchaseSvc.NewPurchaseService(purchaseRepository, validator)
+
+	// purchaseCtr.InitPurchaseController(api, purchaseService)
 }
 
 func (s httpServer) GetApp() *fiber.App {
