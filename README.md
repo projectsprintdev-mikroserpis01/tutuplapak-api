@@ -28,12 +28,6 @@ The application is built on [Go v1.23.4](https://tip.golang.org/doc/go1.22) and 
    task
    ```
 
-4. Run the project in development mode:
-
-   ```sh
-   task dev
-   ```
-
 ---
 
 ## Running the Application with Docker Compose
@@ -41,7 +35,7 @@ The application is built on [Go v1.23.4](https://tip.golang.org/doc/go1.22) and 
 1. Start the Docker containers:
 
    ```sh
-   task service:up
+   task service:up:build
    ```
 
 2. To stop the Docker containers:
