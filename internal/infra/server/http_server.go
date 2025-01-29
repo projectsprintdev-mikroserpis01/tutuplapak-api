@@ -62,6 +62,12 @@ func (s httpServer) MountRoutes(db *sqlx.DB) {
 		return response.SendResponse(c, fiber.StatusOK, "Welcome to Tutuplapak API")
 	})
 
+	api := s.app.Group("/v1")
+
+	api.Get("/", func(c *fiber.Ctx) error {
+		return response.SendResponse(c, fiber.StatusOK, "TutupLapak API v1")
+	})
+
 	s.app.Use(func(c *fiber.Ctx) error {
 		return c.SendFile("./web/not-found.html")
 	})

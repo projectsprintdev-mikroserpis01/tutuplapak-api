@@ -1,10 +1,10 @@
 package env
 
 import (
-	"github.com/spf13/viper"
 	"time"
 
 	"github.com/projectsprintdev-mikroserpis01/tutuplapak-api/pkg/log"
+	"github.com/spf13/viper"
 )
 
 type Env struct {
@@ -30,7 +30,7 @@ var AppEnv = getEnv()
 func getEnv() *Env {
 	env := &Env{}
 
-	viper.SetConfigFile(".env")
+	viper.SetConfigFile("./config/.env")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal(log.LogInfo{
