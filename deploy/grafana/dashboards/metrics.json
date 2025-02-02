@@ -255,19 +255,6 @@
       "type": "timeseries"
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 18
-      },
-      "id": 14,
-      "panels": [],
-      "title": "NGINX Metrics",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -291,14 +278,14 @@
             }
           },
           "mappings": [],
-          "unit": "connps"
+          "unit": "s"
         }
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 19
+        "y": 18
       },
       "id": 5,
       "options": {
@@ -312,15 +299,11 @@
           "sort": "desc"
         }
       },
-      "title": "NGINX Active Connections",
+      "title": "HTTP Request Duration (Seconds)",
       "targets": [
         {
-          "expr": "nginx_up",
-          "legendFormat": "NGINX Status"
-        },
-        {
-          "expr": "nginx_connections_active",
-          "legendFormat": "Active Connections"
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, method, route))",
+          "legendFormat": "p95 {{method}} {{route}}"
         }
       ],
       "type": "timeseries"
@@ -349,14 +332,14 @@
             }
           },
           "mappings": [],
-          "unit": "reqps"
+          "unit": "count"
         }
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 18
       },
       "id": 6,
       "options": {
@@ -370,11 +353,119 @@
           "sort": "desc"
         }
       },
-      "title": "NGINX Request Rate",
+      "title": "Current Goroutines",
       "targets": [
         {
-          "expr": "rate(nginx_http_requests_total[1m])",
-          "legendFormat": "Requests/sec"
+          "expr": "go_goroutines_current",
+          "legendFormat": "Goroutines"
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "mappings": [],
+          "unit": "count"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "OS Threads",
+      "targets": [
+        {
+          "expr": "go_threads_current",
+          "legendFormat": "Threads"
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "mappings": [],
+          "unit": "ns"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "GC Pause Time (ns)",
+      "targets": [
+        {
+          "expr": "go_gc_pause_ns",
+          "legendFormat": "GC Pause"
         }
       ],
       "type": "timeseries"
