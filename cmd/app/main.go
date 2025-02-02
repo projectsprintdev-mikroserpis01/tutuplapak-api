@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,43 +18,102 @@ import (
 
 // Define Prometheus metrics
 var (
+	// HTTP metrics
 	httpRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "http_requests_total",
 			Help: "Total number of HTTP requests",
 		},
-		[]string{"method", "route", "instance"},
+		[]string{"method", "route", "status", "instance"},
 	)
-	httpDurationHistogram = prometheus.NewHistogramVec(
+
+	httpRequestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "http_duration_seconds",
-			Help:    "Histogram of HTTP request durations",
+			Name:    "http_request_duration_seconds",
+			Help:    "HTTP request duration in seconds",
 			Buckets: prometheus.DefBuckets,
 		},
 		[]string{"method", "route", "instance"},
 	)
+
+	// Application metrics
+	goroutinesGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "go_goroutines_current",
+			Help: "Current number of goroutines",
+		},
+	)
+
+	threadsGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "go_threads_current",
+			Help: "Current number of OS threads",
+		},
+	)
+
+	// Memory metrics
+	memAllocGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "go_memory_alloc_bytes",
+			Help: "Current memory usage in bytes",
+		},
+	)
+
+	memTotalAllocGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "go_memory_total_alloc_bytes",
+			Help: "Total allocated memory in bytes",
+		},
+	)
+
+	// GC metrics
+	gcPauseGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "go_gc_pause_ns",
+			Help: "Last GC pause time in nanoseconds",
+		},
+	)
 )
 
 func init() {
-	// Register metrics with Prometheus
-	prometheus.MustRegister(httpRequestsTotal)
-	prometheus.MustRegister(httpDurationHistogram)
+	// Register custom metrics
+	prometheus.MustRegister(httpRequestsTotal, httpRequestDuration, goroutinesGauge, threadsGauge, memAllocGauge, memTotalAllocGauge, gcPauseGauge)
+}
+
+func PrometheusRuntimeMetrics() {
+	var memStats runtime.MemStats
+	for {
+		runtime.ReadMemStats(&memStats)
+
+		goroutinesGauge.Set(float64(runtime.NumGoroutine()))
+		threadsGauge.Set(float64(runtime.GOMAXPROCS(0)))
+		memAllocGauge.Set(float64(memStats.Alloc))
+		memTotalAllocGauge.Set(float64(memStats.TotalAlloc))
+		gcPauseGauge.Set(float64(memStats.PauseNs[(memStats.NumGC+255)%256]))
+
+		time.Sleep(time.Second)
+	}
 }
 
 // Prometheus Middleware to track HTTP request metrics
 func PrometheusMiddleware(c *fiber.Ctx) error {
-	route := c.Path()
 	start := time.Now()
-
-	// Get the app instance dynamically from the environment variable
-	instance := os.Getenv("HOSTNAME") // This gives you the unique hostname for each container (e.g., app_1, app_2, etc.)
+	method := c.Method()
+	route := c.Route().Path
+	instance := os.Getenv("HOSTNAME")
+	if instance == "" {
+		instance = "unknown"
+	}
 
 	err := c.Next() // Call the next handler in the chain
 
-	// Track request metrics
-	httpRequestsTotal.WithLabelValues(c.Method(), route, instance).Inc()
+	// Record metrics after request completes
 	duration := time.Since(start).Seconds()
-	httpDurationHistogram.WithLabelValues(c.Method(), route, instance).Observe(duration)
+	status := c.Response().StatusCode()
+
+	// Track request metrics
+	httpRequestsTotal.WithLabelValues(method, route, fmt.Sprint(status), instance).Inc()
+	httpRequestDuration.WithLabelValues(method, route, instance).Observe(duration)
 
 	return err
 }
@@ -73,6 +133,9 @@ func main() {
 	psqlDB := database.NewPgsqlConn()
 	defer psqlDB.Close()
 	app := server.GetApp()
+
+	// Start runtime metrics collection
+	go PrometheusRuntimeMetrics()
 
 	// Expose the /metrics endpoint for Prometheus
 	// must be defined before MountRoutes
