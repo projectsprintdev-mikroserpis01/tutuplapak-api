@@ -4,6 +4,8 @@ services:
     container_name: server
     ports:
       - "80:80"
+    environment:
+      - TZ=Asia/Jakarta
     volumes:
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
@@ -52,8 +54,40 @@ services:
       timeout: 5s
       retries: 3
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    environment:
+      - TZ=Asia/Jakarta
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - network
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - TZ=Asia/Jakarta
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana  # Persistent storage
+    networks:
+      - network
+    restart: always
+
 volumes:
   postgres:
+    driver: local
+  grafana_data:  # New volume for Grafana persistence
     driver: local
 
 networks:
