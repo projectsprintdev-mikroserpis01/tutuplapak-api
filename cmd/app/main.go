@@ -18,13 +18,16 @@ import (
 
 // Define Prometheus metrics
 var (
+	// Dynamic instance label
+	instance string
+
 	// HTTP metrics
 	httpRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "http_requests_total",
 			Help: "Total number of HTTP requests",
 		},
-		[]string{"method", "route", "status", "instance"},
+		[]string{"method", "route", "status", "container_id", "env"},
 	)
 
 	httpRequestDuration = prometheus.NewHistogramVec(
@@ -33,49 +36,60 @@ var (
 			Help:    "HTTP request duration in seconds",
 			Buckets: prometheus.DefBuckets,
 		},
-		[]string{"method", "route", "instance"},
+		[]string{"method", "route", "container_id", "env"},
 	)
 
 	// Application metrics
-	goroutinesGauge = prometheus.NewGauge(
+	goroutinesGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "go_goroutines_current",
 			Help: "Current number of goroutines",
 		},
+		[]string{"container_id", "env"},
 	)
 
-	threadsGauge = prometheus.NewGauge(
+	threadsGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "go_threads_current",
 			Help: "Current number of OS threads",
 		},
+		[]string{"container_id", "env"},
 	)
 
 	// Memory metrics
-	memAllocGauge = prometheus.NewGauge(
+	memAllocGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "go_memory_alloc_bytes",
 			Help: "Current memory usage in bytes",
 		},
+		[]string{"container_id", "env"},
 	)
 
-	memTotalAllocGauge = prometheus.NewGauge(
+	memTotalAllocGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "go_memory_total_alloc_bytes",
 			Help: "Total allocated memory in bytes",
 		},
+		[]string{"container_id", "env"},
 	)
 
 	// GC metrics
-	gcPauseGauge = prometheus.NewGauge(
+	gcPauseGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "go_gc_pause_ns",
 			Help: "Last GC pause time in nanoseconds",
 		},
+		[]string{"container_id", "env"},
 	)
 )
 
 func init() {
+	// Get the instance name (fallback to hostname if ENV is not set)
+	instance = os.Getenv("HOSTNAME")
+	if instance == "" {
+		instance = "unknown"
+	}
+
 	// Register custom metrics
 	prometheus.MustRegister(httpRequestsTotal, httpRequestDuration, goroutinesGauge, threadsGauge, memAllocGauge, memTotalAllocGauge, gcPauseGauge)
 }
@@ -85,11 +99,11 @@ func PrometheusRuntimeMetrics() {
 	for {
 		runtime.ReadMemStats(&memStats)
 
-		goroutinesGauge.Set(float64(runtime.NumGoroutine()))
-		threadsGauge.Set(float64(runtime.GOMAXPROCS(0)))
-		memAllocGauge.Set(float64(memStats.Alloc))
-		memTotalAllocGauge.Set(float64(memStats.TotalAlloc))
-		gcPauseGauge.Set(float64(memStats.PauseNs[(memStats.NumGC+255)%256]))
+		goroutinesGauge.WithLabelValues(instance, env.AppEnv.AppEnv).Set(float64(runtime.NumGoroutine()))
+		threadsGauge.WithLabelValues(instance, env.AppEnv.AppEnv).Set(float64(runtime.GOMAXPROCS(0)))
+		memAllocGauge.WithLabelValues(instance, env.AppEnv.AppEnv).Set(float64(memStats.Alloc))
+		memTotalAllocGauge.WithLabelValues(instance, env.AppEnv.AppEnv).Set(float64(memStats.TotalAlloc))
+		gcPauseGauge.WithLabelValues(instance, env.AppEnv.AppEnv).Set(float64(memStats.PauseNs[(memStats.NumGC+255)%256]))
 
 		time.Sleep(time.Second)
 	}
@@ -99,11 +113,7 @@ func PrometheusRuntimeMetrics() {
 func PrometheusMiddleware(c *fiber.Ctx) error {
 	start := time.Now()
 	method := c.Method()
-	route := c.Route().Path
-	instance := os.Getenv("HOSTNAME")
-	if instance == "" {
-		instance = "unknown"
-	}
+	route := c.Path()
 
 	err := c.Next() // Call the next handler in the chain
 
@@ -112,8 +122,8 @@ func PrometheusMiddleware(c *fiber.Ctx) error {
 	status := c.Response().StatusCode()
 
 	// Track request metrics
-	httpRequestsTotal.WithLabelValues(method, route, fmt.Sprint(status), instance).Inc()
-	httpRequestDuration.WithLabelValues(method, route, instance).Observe(duration)
+	httpRequestsTotal.WithLabelValues(method, route, fmt.Sprint(status), instance, env.AppEnv.AppEnv).Inc()
+	httpRequestDuration.WithLabelValues(method, route, instance, env.AppEnv.AppEnv).Observe(duration)
 
 	return err
 }
