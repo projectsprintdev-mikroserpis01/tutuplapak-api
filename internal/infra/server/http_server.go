@@ -76,7 +76,7 @@ func (s httpServer) MountRoutes(db *sqlx.DB) {
 		return response.SendResponse(c, fiber.StatusOK, "Welcome to Tutuplapak API")
 	})
 
-	v1 := s.app.Group("/v1")
+	api := s.app.Group("/v1")
 
 	authRepository := authRepo.NewAuthRepository(db)
 	userRepository := userRepo.NewUserRepository(db)
@@ -84,8 +84,12 @@ func (s httpServer) MountRoutes(db *sqlx.DB) {
 	authService := authSvc.NewAuthService(authRepository, validator, bcrypt, jwt)
 	userService := userSvc.NewUserService(userRepository, validator)
 
-	authController.InitAuthController(v1, authService)
-	userController.InitUserController(v1, userService, middleware)
+	authController.InitAuthController(api, authService)
+	userController.InitUserController(api, userService, middleware)
+
+	api.Get("/", func(c *fiber.Ctx) error {
+		return response.SendResponse(c, fiber.StatusOK, "TutupLapak API v1")
+	})
 
 	s.app.Use(func(c *fiber.Ctx) error {
 		return c.SendFile("./web/not-found.html")

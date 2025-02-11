@@ -14,7 +14,7 @@ import (
 
 func NewPgsqlConn() *sqlx.DB {
 	dataSourceName := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s ",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable ",
 		env.AppEnv.DBHost,
 		env.AppEnv.DBPort,
 		env.AppEnv.DBUser,
