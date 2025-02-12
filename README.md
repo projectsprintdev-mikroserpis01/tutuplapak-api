@@ -195,3 +195,23 @@ Replace `/path/to/your/config.ovpn` with the correct path to your `.ovpn` config
    ```sh
    task migrate:force CLI_ARGS=<VERSION>
    ```
+
+---
+
+### Accessing Prometheus and Grafana
+**Prometheus UI:** After running docker-compose up, you can access Prometheus at http://localhost:9090.
+
+**Grafana UI:** After running docker-compose up, you can access Grafana at http://localhost:3000 (default credentials: admin / admin).
+
+**Add Prometheus as Data Source in Grafana:**
+
+`Go to Configuration → Data Sources → Add Data Source → Select Prometheus.`
+
+Set the URL to http://prometheus:9090 (the name of the Prometheus service in docker-compose.yml).
+
+**Create Grafana Dashboard:**
+
+You can now create dashboards with Prometheus queries like:
+- http_requests_total
+- rate(http_requests_total[1m])
+- http_duration_seconds

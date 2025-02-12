@@ -23,7 +23,6 @@ type ValidatorStruct struct {
 }
 
 var Validator = getValidator()
-var DefaultValidator = validator.New()
 
 func getValidator() ValidatorInterface {
 	en := en.New()
@@ -31,17 +30,17 @@ func getValidator() ValidatorInterface {
 
 	trans, found := ut.GetTranslator("en")
 	if !found {
-		log.Error(log.LogInfo{
-			"error": "translator not found",
-		}, "[VALIDATOR][getValidator] Translator not found")
+		// log.Error(log.LogInfo{
+		// 	"error": "translator not found",
+		// }, "[VALIDATOR][getValidator] Translator not found")
 	}
 
 	validator := validator.New()
 	err := enTranslations.RegisterDefaultTranslations(validator, trans)
 	if err != nil {
-		log.Error(log.LogInfo{
-			"error": err.Error(),
-		}, "[VALIDATOR][getValidator] Failed to register default translations")
+		// log.Error(log.LogInfo{
+		// 	"error": err.Error(),
+		// }, "[VALIDATOR][getValidator] Failed to register default translations")
 	}
 
 	return &ValidatorStruct{
