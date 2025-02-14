@@ -51,7 +51,7 @@ tasks:
     desc: "Clear cache"
     cmd: docker builder prune -f
 
-  service:db:connect:
+  service:db:connect: # this is connect to docker db
     desc: "Connect to database using command line interface"
     cmd: docker exec -it postgresdb psql -U {{.DB_USER}} -d {{.DB_NAME}}
     requires:
@@ -59,7 +59,7 @@ tasks:
         - DB_USER
         - DB_NAME
 
-  db:connect:
+  db:connect: # this is connect to db in env (dev/prod)
     desc: "Connect to the remote database"
     cmds:
       - psql -h {{.DB_HOST}} -p {{.DB_PORT}} -U {{.DB_USER}} -d {{.DB_NAME}}
@@ -157,3 +157,22 @@ tasks:
     requires:
       vars:
         - CLI_ARGS
+
+  ec2:connect:
+    desc: "Connect to an EC2 instance (choose 1 or 2 interactively)"
+    cmds:
+      - |
+        echo "Select EC2 server to connect:"
+        echo "1) {{.EC2_PUBLIC_IP_1}}"
+        echo "2) {{.EC2_PUBLIC_IP_2}}"
+        read -p "Enter choice (1 or 2): " choice
+        case "$choice" in
+          2) ssh -i "{{.KEY_PATH}}" ubuntu@{{.EC2_PUBLIC_IP_2}} ;;
+          1) ssh -i "{{.KEY_PATH}}" ubuntu@{{.EC2_PUBLIC_IP_1}} ;;
+          *) echo "Invalid choice"; exit 1 ;;
+        esac
+    requires:
+      vars:
+        - KEY_PATH
+        - EC2_PUBLIC_IP_1
+        - EC2_PUBLIC_IP_2

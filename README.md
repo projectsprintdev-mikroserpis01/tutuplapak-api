@@ -22,10 +22,28 @@ The application is built on [Go v1.23.4](https://tip.golang.org/doc/go1.22) and 
 
    Update configuration values as needed.
 
-3. Install all dependencies, run Docker Compose, create the database schema, and run database migrations:
+3. Install all dependencies:
 
    ```sh
    task
+   ```
+
+4. Start the Docker containers:
+
+   ```sh
+   task service:up:build
+   ```
+
+5. Create the database schema:
+
+   ```sh
+   task db:connect
+   ```
+
+6. Run database migrations:
+
+   ```sh
+   task migrate:up
    ```
 
 ---
@@ -62,6 +80,25 @@ task service:db:connect
 
 ---
 
+## Troubleshooting Database Connection Issues
+
+If you encounter the following error during migration or database connection:
+```
+error: failed to open database: dial tcp: lookup db on 127.0.0.53:53: server misbehaving
+```
+It may be due to a DNS resolution issue. You can resolve this by adding `db` to your local `/etc/hosts` file:
+
+```sh
+echo "127.0.0.1 db" | sudo tee -a /etc/hosts
+```
+
+Then retry:
+```sh
+task migrate:up
+```
+
+---
+
 ## Running Load Tests
 
 1. Navigate to the `test` folder and clone the repository:
@@ -85,25 +122,6 @@ task service:db:connect
    ```sh
    BASE_URL=http://localhost:8080 k6 run load_test.js
    ```
-
----
-
-## Troubleshooting Database Connection Issues
-
-If you encounter the following error during migration or database connection:
-```
-error: failed to open database: dial tcp: lookup db on 127.0.0.53:53: server misbehaving
-```
-It may be due to a DNS resolution issue. You can resolve this by adding `db` to your local `/etc/hosts` file:
-
-```sh
-echo "127.0.0.1 db" | sudo tee -a /etc/hosts
-```
-
-Then retry:
-```sh
-task migrate:up
-```
 
 ---
 
@@ -164,7 +182,7 @@ Replace `/path/to/your/config.ovpn` with the correct path to your `.ovpn` config
 
 ---
 
-### Connecting to Remote Database and Running Migrations
+## Connecting to Remote Database and Running Migrations
 
 1. **Update Your `.env` File**:  
    Ensure your `.env` file contains the correct production database credentials:
@@ -198,20 +216,57 @@ Replace `/path/to/your/config.ovpn` with the correct path to your `.ovpn` config
 
 ---
 
+## Connecting to the EC2 Instance (Redis Server)
+
+To connect to the EC2 instance where Redis is hosted, use the following command:
+
+```sh
+task ec2:connect
+```
+
+This will prompt you to select which EC2 instance to connect to. Once connected, you can interact with the Redis server.
+
+> *NOTE: put the key file in the root*
+
+To manually connect using SSH:
+
+```sh
+ssh -i /path/to/your-key.pem ubuntu@<EC2_PUBLIC_IP>
+```
+
+Replace `/path/to/your-key.pem` with your private key and `<EC2_PUBLIC_IP>` with the public IP of the EC2 instance.
+
+To check if Redis is running:
+
+```sh
+redis-cli ping
+```
+
+If Redis is running correctly, it should return:
+
+```
+PONG
+```
+
+---
+
 ### Accessing Prometheus and Grafana
 **Prometheus UI:** After running docker-compose up, you can access Prometheus at http://localhost:9090.
 
 **Grafana UI:** After running docker-compose up, you can access Grafana at http://localhost:3000 (default credentials: admin / admin).
 
-**Add Prometheus as Data Source in Grafana:**
+> *These steps below are automatically done by prometheus.yml and grafana folder in the deploy folder.*
+
+**Add Prometheus as Data Source in Grafana (manually):**
 
 `Go to Configuration → Data Sources → Add Data Source → Select Prometheus.`
 
 Set the URL to http://prometheus:9090 (the name of the Prometheus service in docker-compose.yml).
 
-**Create Grafana Dashboard:**
+**Create Grafana Dashboard (manually):**
 
 You can now create dashboards with Prometheus queries like:
 - http_requests_total
 - rate(http_requests_total[1m])
 - http_duration_seconds
+

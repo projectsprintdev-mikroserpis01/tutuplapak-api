@@ -31,3 +31,6 @@ vendor/
 # ENV
 .env
 .env.supabase
+
+# key certificate
+*.key
