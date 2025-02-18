@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/projectsprintdev-mikroserpis01/tutuplapak-api/internal/infra/database"
 	"github.com/projectsprintdev-mikroserpis01/tutuplapak-api/internal/infra/env"
+	"github.com/projectsprintdev-mikroserpis01/tutuplapak-api/internal/infra/redis"
 	"github.com/projectsprintdev-mikroserpis01/tutuplapak-api/internal/infra/server"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -138,10 +139,12 @@ func adaptor(h http.Handler) fiber.Handler {
 }
 
 func main() {
-	// Initialize server and database
+	// Initialize server, Redis and database
 	server := server.NewHttpServer()
 	psqlDB := database.NewPgsqlConn()
 	defer psqlDB.Close()
+	redis.InitRedis()
+	defer redis.CloseRedis()
 	app := server.GetApp()
 
 	// Start runtime metrics collection

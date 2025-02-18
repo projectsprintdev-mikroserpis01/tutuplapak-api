@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/prometheus/client_golang v1.20.5
+	github.com/redis/rueidis v1.0.54
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/viper v1.19.0
 	github.com/valyala/fasthttp v1.51.0

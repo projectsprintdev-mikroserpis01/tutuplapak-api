@@ -224,19 +224,14 @@ To connect to the EC2 instance where Redis is hosted, use the following command:
 task ec2:connect
 ```
 
-This will prompt you to select which EC2 instance to connect to. Once connected, you can interact with the Redis server.
-
 > *NOTE: put the key file in the root*
 
-To manually connect using SSH:
+This will prompt you to select which EC2 instance to connect to:
 
-```sh
-ssh -i /path/to/your-key.pem ubuntu@<EC2_PUBLIC_IP>
-```
+1 => connect to REDIS MASTER
+2 => connect to REDIS REPLICA
 
-Replace `/path/to/your-key.pem` with your private key and `<EC2_PUBLIC_IP>` with the public IP of the EC2 instance.
-
-To check if Redis is running:
+Once connected, you can interact with the Redis server. To check if Redis is running:
 
 ```sh
 redis-cli ping
@@ -250,7 +245,7 @@ PONG
 
 ---
 
-### Accessing Prometheus and Grafana
+## Accessing Prometheus and Grafana
 **Prometheus UI:** After running docker-compose up, you can access Prometheus at http://localhost:9090.
 
 **Grafana UI:** After running docker-compose up, you can access Grafana at http://localhost:3000 (default credentials: admin / admin).
