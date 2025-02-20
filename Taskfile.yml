@@ -111,19 +111,50 @@ tasks:
   dev:
     desc: "Start development server"
     cmds:
+      - task: dev:app
+      - task: dev:worker
+
+  dev:app:
+    desc: "Start main application"
+    cmds:
       - air
+
+  dev:worker:
+    desc: "Start Redis worker"
+    cmds:
+      - air -c .air.worker.toml
 
   lint:
     desc: "Run linter"
     cmd: golangci-lint run ./...
 
   build:
-    desc: "Build binary"
+    desc: "Build binaries"
+    cmds:
+      - task: build:app
+      - task: build:worker
+
+  build:app:
+    desc: "Build main application binary"
     cmd: GOOS=linux GOARCH=arm64 go build -o bin/main cmd/app/main.go
 
+  build:worker:
+    desc: "Build Redis worker binary"
+    cmd: GOOS=linux GOARCH=arm64 go build -o bin/redis_worker cmd/worker/redis_worker.go
+
   start:
-    desc: "Start binary"
+    desc: "Start binaries"
+    cmds:
+      - task: start:app
+      - task: start:worker
+
+  start:app:
+    desc: "Start main application binary"
     cmd: ./bin/main
+
+  start:worker:
+    desc: "Start Redis worker binary"
+    cmd: ./bin/redis_worker
 
   test:
     desc: "Run tests"

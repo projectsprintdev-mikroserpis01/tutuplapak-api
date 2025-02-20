@@ -11,12 +11,14 @@ RUN go mod download
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/app
+RUN CGO_ENABLED=0 GOOS=linux go build -o redis_worker ./cmd/worker
 
 FROM alpine:3.20
 
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/redis_worker .
 COPY --from=builder /app/data ./data
 COPY --from=builder /app/config ./config
 

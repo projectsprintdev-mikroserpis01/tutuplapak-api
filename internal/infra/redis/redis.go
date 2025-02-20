@@ -8,9 +8,12 @@ import (
 	"github.com/redis/rueidis"
 )
 
-var client rueidis.Client
+var (
+	masterClient  rueidis.Client
+	replicaClient rueidis.Client
+)
 
-// InitRedis initializes the Redis client with master and replica addresses.
+// InitRedis initializes separate Redis clients for master and replica.
 func InitRedis() {
 	// Load environment variables
 	masterAddr := os.Getenv("REDIS_MASTER_IP") + ":" + os.Getenv("REDIS_PORT")
@@ -18,23 +21,44 @@ func InitRedis() {
 	password := os.Getenv("REDIS_PASS")
 
 	var err error
-	client, err = rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{masterAddr, replicaAddr}, // Connects to both
+
+	// Connect to Master
+	masterClient, err = rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{masterAddr},
 		Password:    password,
 	})
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		log.Fatalf("Failed to connect to Redis Master: %v", err)
 	}
-	fmt.Println("Connected to Redis")
+
+	// Connect to Replica
+	replicaClient, err = rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{replicaAddr},
+		Password:    password,
+	})
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis Replica: %v", err)
+	}
+
+	fmt.Println("Connected to Redis (Master & Replica)")
 }
 
-func GetClient() rueidis.Client {
-	return client
+// GetMasterClient returns the Redis master client.
+func GetMasterClient() rueidis.Client {
+	return masterClient
 }
 
-// CloseRedis closes the Redis client.
+// GetReplicaClient returns the Redis replica client.
+func GetReplicaClient() rueidis.Client {
+	return replicaClient
+}
+
+// CloseRedis closes both Redis clients.
 func CloseRedis() {
-	if client != nil {
-		client.Close()
+	if masterClient != nil {
+		masterClient.Close()
+	}
+	if replicaClient != nil {
+		replicaClient.Close()
 	}
 }
