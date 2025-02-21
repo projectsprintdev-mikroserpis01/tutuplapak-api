@@ -1,10 +1,9 @@
 package redis
 
 import (
-	"fmt"
 	"log"
-	"os"
 
+	"github.com/projectsprintdev-mikroserpis01/tutuplapak-api/internal/infra/env"
 	"github.com/redis/rueidis"
 )
 
@@ -15,10 +14,12 @@ var (
 
 // InitRedis initializes separate Redis clients for master and replica.
 func InitRedis() {
+	log.Println("====== Initializing Redis Clients ======")
+
 	// Load environment variables
-	masterAddr := os.Getenv("REDIS_MASTER_IP") + ":" + os.Getenv("REDIS_PORT")
-	replicaAddr := os.Getenv("REDIS_REPLICA_IP") + ":" + os.Getenv("REDIS_PORT")
-	password := os.Getenv("REDIS_PASS")
+	masterAddr := env.AppEnv.RedisMasterIp + ":" + env.AppEnv.RedisPort
+	replicaAddr := env.AppEnv.RedisReplicaIp + ":" + env.AppEnv.RedisPort
+	password := env.AppEnv.RedisPass
 
 	var err error
 
@@ -40,7 +41,7 @@ func InitRedis() {
 		log.Fatalf("Failed to connect to Redis Replica: %v", err)
 	}
 
-	fmt.Println("Connected to Redis (Master & Replica)")
+	log.Println("====== Connected to Redis (Master & Replica) ======")
 }
 
 // GetMasterClient returns the Redis master client.

@@ -23,6 +23,10 @@ type Env struct {
 	AWSS3BucketName    string        `mapstructure:"AWS_S3_BUCKET_NAME"`
 	AWSRegion          string        `mapstructure:"AWS_REGION"`
 	AWSS3Path          string        `mapstructure:"AWS_S3_PATH"`
+	RedisMasterIp      string        `mapstructure:"REDIS_MASTER_IP"`
+	RedisReplicaIp     string        `mapstructure:"REDIS_REPLICA_IP"`
+	RedisPort          string        `mapstructure:"REDIS_PORT"`
+	RedisPass          string        `mapstructure:"REDIS_PASS"`
 }
 
 var AppEnv = getEnv()
