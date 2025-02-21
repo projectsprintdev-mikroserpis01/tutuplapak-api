@@ -12,6 +12,7 @@ import (
 
 func main() {
 	// Initialize Redis
+	log.Println("====== Initializing Redis WORKER ======")
 	redis.InitRedis()
 	defer redis.CloseRedis()
 
@@ -30,7 +31,7 @@ func main() {
 	// Define the event handler
 	handler := func(ctx context.Context, event redis.ProductEvent) error {
 		// Handle the event (e.g., log it)
-		log.Printf("Handling event: %v", event)
+		log.Printf("REDIS WORKER => Handling event: %v", event)
 		return nil
 	}
 

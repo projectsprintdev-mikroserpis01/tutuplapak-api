@@ -22,8 +22,14 @@ COPY --from=builder /app/redis_worker .
 COPY --from=builder /app/data ./data
 COPY --from=builder /app/config ./config
 
+# Create startup script
+RUN echo '#!/bin/sh' > /app/start.sh && \
+  echo '/app/redis_worker &' >> /app/start.sh && \
+  echo 'exec /app/main' >> /app/start.sh && \
+  chmod +x /app/start.sh
+
 EXPOSE 8080
 
 RUN apk --no-cache add ca-certificates tzdata
 
-ENTRYPOINT [ "/app/main" ]
+ENTRYPOINT ["/app/start.sh"]

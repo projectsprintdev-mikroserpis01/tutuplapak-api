@@ -234,7 +234,8 @@ This will prompt you to select which EC2 instance to connect to:
 Once connected, you can interact with the Redis server. To check if Redis is running:
 
 ```sh
-redis-cli ping
+redis-cli -a yourpassword
+PING
 ```
 
 If Redis is running correctly, it should return:
